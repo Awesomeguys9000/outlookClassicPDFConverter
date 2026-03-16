@@ -14,9 +14,13 @@ namespace AttachmentPdfConverter
             // Clean up if needed
         }
 
-        protected override Microsoft.Office.Core.IRibbonExtensibility CreateRibbonExtensibilityObject()
+        protected override object RequestService(Guid serviceGuid)
         {
-            return new PdfRibbon();
+            if (serviceGuid == typeof(Microsoft.Office.Core.IRibbonExtensibility).GUID)
+            {
+                return new PdfRibbon();
+            }
+            return base.RequestService(serviceGuid);
         }
 
         #region VSTO generated code
