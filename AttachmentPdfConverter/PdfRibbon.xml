@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
+  <ribbon>
+    <tabs>
+      <tab idMso="TabNewMailMessage">
+        <group id="PdfConverterGroup" label="PDF Converter" insertAfterMso="GroupInclude">
+          <button id="ConvertToPdfButton"
+                  label="Convert to PDF"
+                  size="large"
+                  imageMso="FileSaveAsPdf"
+                  screentip="Convert attachments to PDF"
+                  supertip="Select one or more document attachments (.doc, .docx, .xlsx, .csv) and convert them to PDF using Microsoft Print to PDF."
+                  onAction="OnConvertToPdf" />
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>
