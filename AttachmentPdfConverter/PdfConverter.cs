@@ -69,19 +69,19 @@ namespace AttachmentPdfConverter
             try
             {
                 wordApp = new Word.Application();
-                wordApp.Visible = false;
+                wordApp.Visible = true;
+                wordApp.WindowState = Word.WdWindowState.wdWindowStateMinimize;
                 wordApp.DisplayAlerts = Word.WdAlertLevel.wdAlertsNone;
 
                 // Save and set the printer
                 string previousPrinter = wordApp.ActivePrinter;
                 wordApp.ActivePrinter = PdfPrinterName;
 
-                // Open the document read-only
+                // Open the document (must be visible for PrintOut to work)
                 doc = wordApp.Documents.Open(
                     inputPath,
                     ReadOnly: true,
-                    AddToRecentFiles: false,
-                    Visible: false);
+                    AddToRecentFiles: false);
 
                 // Start a background task to handle the "Save Print Output As" dialog
                 // from the Microsoft Print to PDF driver
@@ -140,7 +140,8 @@ namespace AttachmentPdfConverter
             try
             {
                 excelApp = new Excel.Application();
-                excelApp.Visible = false;
+                excelApp.Visible = true;
+                excelApp.WindowState = Excel.XlWindowState.xlMinimized;
                 excelApp.DisplayAlerts = false;
 
                 // Save and set the printer
