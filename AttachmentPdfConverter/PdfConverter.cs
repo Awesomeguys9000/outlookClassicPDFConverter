@@ -76,7 +76,7 @@ namespace AttachmentPdfConverter
                     OpenAfterExport: false,
                     OptimizeFor: Word.WdExportOptimizeFor.wdExportOptimizeForPrint,
                     Range: Word.WdExportRange.wdExportAllDocument,
-                    IncludeDocprops: true,
+                    IncludeDocProps: true,
                     KeepIRM: true,
                     CreateBookmarks: Word.WdExportCreateBookmarks.wdExportCreateHeadingBookmarks,
                     BitmapMissingFonts: true,
