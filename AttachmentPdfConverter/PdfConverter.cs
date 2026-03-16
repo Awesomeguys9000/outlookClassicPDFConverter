@@ -64,23 +64,69 @@ namespace AttachmentPdfConverter
                 wordApp = new Word.Application();
                 wordApp.Visible = false;
                 wordApp.DisplayAlerts = Word.WdAlertLevel.wdAlertsNone;
+                
+                // CRITICAL: Prevent macros from running or prompting (which causes RPC_E_DISCONNECTED)
+                wordApp.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable;
 
+                // Open with all warnings and updates suppressed
                 doc = wordApp.Documents.Open(
-                    inputPath,
+                    FileName: inputPath,
+                    ConfirmConversions: false,
                     ReadOnly: true,
-                    AddToRecentFiles: false);
+                    AddToRecentFiles: false,
+                    PasswordDocument: "",
+                    PasswordTemplate: "",
+                    Revert: false,
+                    WritePasswordDocument: "",
+                    WritePasswordTemplate: "",
+                    Format: Type.Missing,
+                    Encoding: Type.Missing,
+                    Visible: false,
+                    OpenAndRepair: false,
+                    DocumentDirection: Type.Missing,
+                    NoEncodingDialog: true,
+                    XMLTransform: Type.Missing);
 
-                doc.ExportAsFixedFormat(
-                    outputPath,
-                    Word.WdExportFormat.wdExportFormatPDF,
-                    OpenAfterExport: false,
-                    OptimizeFor: Word.WdExportOptimizeFor.wdExportOptimizeForPrint,
-                    Range: Word.WdExportRange.wdExportAllDocument,
-                    IncludeDocProps: true,
-                    KeepIRM: true,
-                    CreateBookmarks: Word.WdExportCreateBookmarks.wdExportCreateHeadingBookmarks,
-                    BitmapMissingFonts: true,
-                    UseISO19005_1: false);
+                // Add a small delay to let Word fully load the layout before exporting
+                Thread.Sleep(500);
+
+                // Retry loop for the actual export, in case Word is temporarily busy rendering
+                int maxRetries = 3;
+                bool success = false;
+                Exception lastEx = null;
+
+                for (int i = 0; i < maxRetries; i++)
+                {
+                    try
+                    {
+                        doc.ExportAsFixedFormat(
+                            outputPath,
+                            Word.WdExportFormat.wdExportFormatPDF,
+                            OpenAfterExport: false,
+                            OptimizeFor: Word.WdExportOptimizeFor.wdExportOptimizeForPrint,
+                            Range: Word.WdExportRange.wdExportAllDocument,
+                            Item: Word.WdExportItem.wdExportDocumentContent,
+                            IncludeDocProps: true,
+                            KeepIRM: true,
+                            CreateBookmarks: Word.WdExportCreateBookmarks.wdExportCreateHeadingBookmarks,
+                            DocStructureTags: true,
+                            BitmapMissingFonts: true,
+                            UseISO19005_1: false);
+                        
+                        success = true;
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        lastEx = ex;
+                        Thread.Sleep(1000); // Wait 1 second before retry
+                    }
+                }
+
+                if (!success && lastEx != null)
+                {
+                    throw new Exception($"Failed to export after {maxRetries} attempts. Last error: {lastEx.Message}", lastEx);
+                }
 
                 doc.Close(Word.WdSaveOptions.wdDoNotSaveChanges);
                 doc = null;
