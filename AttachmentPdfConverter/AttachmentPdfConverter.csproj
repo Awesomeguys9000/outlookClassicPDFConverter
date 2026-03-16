@@ -5,14 +5,12 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{E7A3F2B1-4C5D-6E7F-8A9B-0C1D2E3F4A5B}</ProjectGuid>
-    <ProjectTypeGuids>{BAA0C2D2-18E9-4B4D-823E-A87B0F3E2B6C};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AttachmentPdfConverter</RootNamespace>
     <AssemblyName>AttachmentPdfConverter</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <OfficeApplication>Outlook</OfficeApplication>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <RegisterForComInterop>true</RegisterForComInterop>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,24 +30,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Office.Interop.Outlook">
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.Office.Interop.Word">
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.Office.Interop.Excel">
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="office">
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.Office.Tools.Common.v4.0.Utilities" />
-    <Reference Include="Microsoft.Office.Tools.Outlook.v4.0.Utilities" />
-    <Reference Include="Microsoft.Office.Tools" />
-    <Reference Include="Microsoft.Office.Tools.Common" />
-    <Reference Include="Microsoft.Office.Tools.Outlook" />
-    <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime" />
+    <PackageReference Include="Microsoft.Office.Interop.Outlook" Version="15.0.4797.1004" />
+    <PackageReference Include="Microsoft.Office.Interop.Word" Version="15.0.4797.1004" />
+    <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4797.1004" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -60,11 +45,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ThisAddIn.cs" />
-    <Compile Include="ThisAddIn.Designer.cs">
-      <DependentUpon>ThisAddIn.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PdfRibbon.cs" />
+    <Compile Include="ComInterfaces.cs" />
+    <Compile Include="Connect.cs" />
     <Compile Include="AttachmentPickerForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -81,5 +63,4 @@
     <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\OfficeTools\Microsoft.VisualStudio.Tools.Office.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\OfficeTools\Microsoft.VisualStudio.Tools.Office.targets')" />
 </Project>

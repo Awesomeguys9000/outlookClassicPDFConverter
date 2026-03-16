@@ -4,29 +4,69 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using Microsoft.Office.Core;
 using Outlook = Microsoft.Office.Interop.Outlook;
+using Microsoft.Win32;
 
 namespace AttachmentPdfConverter
 {
     [ComVisible(true)]
-    public class PdfRibbon : IRibbonExtensibility
+    [Guid("F1A2B3C4-D5E6-4F78-9A0B-C1D2E3F4A5B6")]
+    [ProgId("AttachmentPdfConverter.Connect")]
+    public class Connect : IDTExtensibility2, IRibbonExtensibility
     {
+        private Outlook.Application _outlookApp;
         private IRibbonUI _ribbon;
 
-        // Supported file extensions for conversion
         private static readonly HashSet<string> SupportedExtensions = new HashSet<string>(
             StringComparer.OrdinalIgnoreCase)
         {
             ".doc", ".docx", ".xlsx", ".csv"
         };
 
+        #region COM Registration
+
+        [ComRegisterFunction]
+        public static void RegisterFunction(Type type)
+        {
+            // Register as an Outlook add-in
+            string keyName = @"Software\Microsoft\Office\Outlook\Addins\" + type.FullName;
+            using (var key = Registry.CurrentUser.CreateSubKey(keyName))
+            {
+                key.SetValue("FriendlyName", "Attachment PDF Converter");
+                key.SetValue("Description", "Converts email attachments to PDF using Microsoft Print to PDF");
+                key.SetValue("LoadBehavior", 3); // Load at startup
+            }
+        }
+
+        [ComUnregisterFunction]
+        public static void UnregisterFunction(Type type)
+        {
+            string keyName = @"Software\Microsoft\Office\Outlook\Addins\" + type.FullName;
+            Registry.CurrentUser.DeleteSubKey(keyName, false);
+        }
+
+        #endregion
+
+        #region IDTExtensibility2
+
+        public void OnConnection(object Application, ext_ConnectMode ConnectMode,
+            object AddInInst, ref Array custom)
+        {
+            _outlookApp = (Outlook.Application)Application;
+        }
+
+        public void OnDisconnection(ext_DisconnectMode RemoveMode, ref Array custom) { }
+        public void OnAddInsUpdate(ref Array custom) { }
+        public void OnStartupComplete(ref Array custom) { }
+        public void OnBeginShutdown(ref Array custom) { }
+
+        #endregion
+
         #region IRibbonExtensibility
 
-        public string GetCustomUI(string ribbonID)
+        public string GetCustomUI(string RibbonID)
         {
-            // Only show the button in the mail compose window
-            if (ribbonID == "Microsoft.Outlook.Mail.Compose")
+            if (RibbonID == "Microsoft.Outlook.Mail.Compose")
             {
                 return GetResourceText("AttachmentPdfConverter.PdfRibbon.xml");
             }
@@ -35,7 +75,7 @@ namespace AttachmentPdfConverter
 
         #endregion
 
-        #region Ribbon Callbacks
+        #region Ribbon Callbacks (called by name from the XML)
 
         public void Ribbon_Load(IRibbonUI ribbonUI)
         {
@@ -46,7 +86,6 @@ namespace AttachmentPdfConverter
         {
             try
             {
-                // Get the active compose window
                 var inspector = control.Context as Outlook.Inspector;
                 if (inspector == null) return;
 
@@ -58,7 +97,6 @@ namespace AttachmentPdfConverter
                     return;
                 }
 
-                // Collect convertible attachment names
                 var convertible = new List<string>();
                 for (int i = 1; i <= mailItem.Attachments.Count; i++)
                 {
@@ -78,7 +116,6 @@ namespace AttachmentPdfConverter
                     return;
                 }
 
-                // Show the attachment picker dialog
                 using (var picker = new AttachmentPickerForm(convertible))
                 {
                     if (picker.ShowDialog() == DialogResult.OK && picker.SelectedAttachments.Count > 0)
@@ -112,7 +149,7 @@ namespace AttachmentPdfConverter
 
             try
             {
-                // Phase 1: Save selected attachments to temp and convert to PDF
+                // Phase 1: Save selected attachments and convert to PDF
                 var conversions = new List<ConversionInfo>();
 
                 for (int i = 1; i <= mailItem.Attachments.Count; i++)
@@ -139,7 +176,7 @@ namespace AttachmentPdfConverter
                     }
                 }
 
-                // Phase 2: Replace attachments (process in reverse order to preserve indices)
+                // Phase 2: Replace attachments (reverse order to preserve indices)
                 conversions.Sort((a, b) => b.OriginalIndex.CompareTo(a.OriginalIndex));
 
                 foreach (var conv in conversions)
@@ -153,7 +190,6 @@ namespace AttachmentPdfConverter
                     successCount++;
                 }
 
-                // Show results
                 string message = $"Successfully converted {successCount} attachment(s) to PDF.";
                 if (errors.Count > 0)
                 {
